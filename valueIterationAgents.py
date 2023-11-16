@@ -163,5 +163,47 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
         ValueIterationAgent.__init__(self, mdp, discount, iterations)
 
     def runValueIteration(self):
-        "*** YOUR CODE HERE ***"
+        predecessors = self.computePredecessors()
+        priorityQueue = util.PriorityQueue()
+
+        for state in self.mdp.getStates():
+            if not self.mdp.isTerminal(state):
+    
+                # The highest Q-value across all possible actions from s
+                maxQValue = max(self.computeQValueFromValues(state, action) for action in self.mdp.getPossibleActions(state))
+
+                diff = abs(self.values[state] - maxQValue) # Get the difference 
+                priorityQueue.update(state, -diff) # Push to PQ
+
+        for _ in range(self.iterations):
+
+            if priorityQueue.isEmpty():
+                return
+            
+            state = priorityQueue.pop()
+
+            if not self.mdp.isTerminal(state):
+                self.values[state] = max(self.computeQValueFromValues(state, action)
+                                             for action in self.mdp.getPossibleActions(state))
+
+                for predecessor in predecessors[state]:
+                    # The highest Q-value across all possible actions from p
+                    maxQValue = max(self.computeQValueFromValues(predecessor, action) for action in self.mdp.getPossibleActions(predecessor))
+                    diff = abs(self.values[predecessor] - maxQValue) # Get the difference 
+
+                    if diff > self.theta:
+                        priorityQueue.update(predecessor, -diff)
+
+                                
+    def computePredecessors(self):
+        predecessors = {}
+        for state in self.mdp.getStates():
+            predecessors[state] = set()
+
+        for state in self.mdp.getStates():
+            for action in self.mdp.getPossibleActions(state):
+                for successor, _ in self.mdp.getTransitionStatesAndProbs(state, action):
+                    predecessors[successor].add(state)
+
+        return predecessors
 
