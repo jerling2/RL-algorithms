@@ -60,9 +60,15 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.runValueIteration()
 
     def runValueIteration(self):
-        # Write value iteration code here
-        "*** YOUR CODE HERE ***"
 
+        for _ in range(self.iterations): 
+            newValues = util.Counter() 
+            for state in self.mdp.getStates(): 
+                if not self.mdp.isTerminal(state):
+                    # V(k+1)(s)  = max(a) Q(s', a)
+                    newValues[state] = max(self.computeQValueFromValues(state, action)
+                                             for action in self.mdp.getPossibleActions(state))
+            self.values = newValues
 
     def getValue(self, state):
         """
@@ -76,8 +82,11 @@ class ValueIterationAgent(ValueEstimationAgent):
           Compute the Q-value of action in state from the
           value function stored in self.values.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # Q(s,a) = sum(s')[T(s,a,s')[R(s,a,s')+ gamma*V(k)(s')]]
+        qVal = sum(prob * (self.mdp.getReward(state, action, nextState) + self.discount * self.values[nextState])
+                   for nextState, prob in self.mdp.getTransitionStatesAndProbs(state, action))
+        
+        return qVal
 
     def computeActionFromValues(self, state):
         """
@@ -88,8 +97,12 @@ class ValueIterationAgent(ValueEstimationAgent):
           there are no legal actions, which is the case at the
           terminal state, you should return None.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        if self.mdp.isTerminal(state):
+            return None 
+            
+        bestAction = max(self.mdp.getPossibleActions(state), key=lambda action: self.computeQValueFromValues(state, action))
+
+        return bestAction
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
@@ -100,6 +113,7 @@ class ValueIterationAgent(ValueEstimationAgent):
 
     def getQValue(self, state, action):
         return self.computeQValueFromValues(state, action)
+
 
 class AsynchronousValueIterationAgent(ValueIterationAgent):
     """
