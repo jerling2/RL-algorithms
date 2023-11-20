@@ -40,15 +40,15 @@ class QLearningAgent(ReinforcementAgent):
     """
     def __init__(self, **args):
         ReinforcementAgent.__init__(self, **args)
-        self.qValues = {}
+        self.qValues = util.Counter()
 
     def getQValue(self, state, action):
         """
             Returns Q(state,action) Should return 0.0 if we have never seen a
             state or the Q node value otherwise
         """
-        return self.qValues.get((state, action), 0)
-
+        return self.qValues[(state, action)]
+    
     def computeValueFromQValues(self, state):
         """
             Returns max_action Q(state,action) where the max is over legal
@@ -56,11 +56,11 @@ class QLearningAgent(ReinforcementAgent):
             case at the terminal state, you should return a value of 0.0.
         """
         legalMoves = self.getLegalActions(state)
-        if len(legalMoves) == 0:
+        if not len(legalMoves):
             return 0.0
-        all_values = [self.getQValue(state, action) for action in legalMoves]
-        max_value = max(all_values)
-        return max_value
+        allValues = [self.getQValue(state, action) for action in legalMoves]
+        maxValue = max(allValues)
+        return maxValue
 
     def computeActionFromQValues(self, state):
         """
@@ -69,17 +69,15 @@ class QLearningAgent(ReinforcementAgent):
             should return None.
         """
         legalActions = self.getLegalActions(state)
-        action = None
         if not len(legalActions):
-            return action
-        max_qValue = self.getValue(state)
+            return None
+        maxQValue = self.getValue(state)
         bestActions = []
         for action in legalActions:
             qValue = self.getQValue(state, action)
-            if qValue == max_qValue:
+            if qValue == maxQValue:
                 bestActions.append(action)
-        action = random.choice(bestActions)
-        return action
+        return random.choice(bestActions)
     
     def getAction(self, state):
         """
@@ -93,7 +91,7 @@ class QLearningAgent(ReinforcementAgent):
             HINT: To pick randomly from a list, use random.choice(list)
         """
         legalActions = self.getLegalActions(state)
-        if len(legalActions) == 0:
+        if not len(legalActions):
             return None
         if util.flipCoin(self.epsilon): 
             return random.choice(legalActions)
